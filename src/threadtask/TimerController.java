@@ -29,11 +29,15 @@ public class TimerController {
 	private Label displayField;
 	/** Object of inner class that performs counting. */
 	private CountUp task;
-	
+
+	private CountUpTask worker;
+
 	@FXML
 	public void initialize() {
-		startButton.setOnAction( this::start );
-		stopButton.setOnAction( this::stop );
+		//startButton.setOnAction( this::start );
+		//stopButton.setOnAction( this::stop );
+		startButton.setOnAction( this::startWorker );
+		stopButton.setOnAction( this::stopWorker );
 	}
 	
 	/** Call this method when Start button is pressed. */
@@ -59,7 +63,32 @@ public class TimerController {
 		displayField.setText( Integer.toString(count) );
 		System.out.println(count);
 	}
-	
+
+	/** Call this method to start the task. */
+	public void startWorker(ActionEvent event) {
+		int count = Integer.parseInt(inputField.getText());
+		worker = new CountUpTask(count);
+		// automatically update the progressBar using worker's progress Property
+		progressBar.progressProperty().bind( worker.progressProperty() );
+		// update the displayField whenever the value of worker changes:
+		ChangeListener<Integer> listener = new ChangeListener<Integer>() {
+			@Override
+			public void changed(ObservableValue<? extends Integer> observable,
+								Integer oldValue,
+								Integer newValue) {
+				displayField.setText(newValue.toString());
+			}
+		};
+		// add the observer (ChangeListener)
+		worker.valueProperty().addListener( listener );
+		new Thread(worker).start();
+	}
+	/** Call this method when Stop button is pressed. */
+	public void stopWorker(ActionEvent event) {
+		worker.cancel();
+	}
+
+
 	/**
 	 * A task that counts from 1 to a given total.
 	 */
